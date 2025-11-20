@@ -1,21 +1,18 @@
-FROM ubuntu:latest
+FROM python:3.10-slim
 
-# Install linux packages
-RUN apt update
-RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt install -y tzdata
-RUN apt install -y python3-pip git zip curl htop screen libgl1-mesa-glx libglib2.0-0
-RUN alias python=python3
+ENV DEBIAN_FRONTEND=noninteractive
+WORKDIR /app
 
-# Create working directory
-COPY . .
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    build-essential libgl1 libglib2.0-0 git zip curl htop screen \
+ && rm -rf /var/lib/apt/lists/*
 
-# Install python dependencies
-RUN python3 -m pip install --upgrade pip
-RUN pip install --no-cache -r requirements.txt
+COPY weapons-detector-yolo/ ./ 
+COPY requirements.txt .
+
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5009
-
-WORKDIR /weapons-detector-yolo
-
-#CMD ["gunicorn", "--workers=2", "--bind=0.0.0.0:5016", "app:app"]
 CMD ["python3", "app.py"]
